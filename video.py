@@ -7,8 +7,7 @@ import speech_recognition as sr
 from transformers import pipeline
 from dotenv import load_dotenv
 
-# Initialize Flask app and Blueprint
-app = Flask(__name__)
+# Initialize Blueprint
 video_bp = Blueprint('video', __name__)
 
 # Load environment variables
@@ -125,46 +124,6 @@ def ask_question():
         return jsonify({"answer": response.text})
     except Exception as e:
         return jsonify({"error": str(e)})
-#def chat():
-#    if 'chat_history' not in session:
-#        session['chat_history'] = []
-#
-#    if request.method == 'POST':
-#        user_input = request.form['user_input']
-#        if user_input:
-#            try:
-#                # Add user message to chat history
-#                session['chat_history'].append({"role": "user", "parts": [{"text": user_input}]})
-#
-#                # Create the chat object with the correct history format
-#                chat = model.start_chat(history=[
-#                    {"role": msg["role"], "parts": [{"text": msg["parts"][0]["text"]}]}
-#                    for msg in session['chat_history']
-#                ])
-#
-#                # Send the message and get the response
-#                response = chat.send_message(user_input)
-#
-#                # Add model response to chat history
-#                session['chat_history'].append({"role": "model", "parts": [{"text": response.text}]})
-#
-#                return jsonify({"success": True, "response": response.text})
-#            except genai.types.generation_types.StopCandidateException:
-#                return jsonify({"success": False, "error": "The model stopped generating content. This might be due to content recitation or safety concerns."})
-#            except Exception as e:
-#                return jsonify({"success": False, "error": f"An error occurred: {str(e)}"})
-#        else:
-#            return jsonify({"success": False, "error": "Please enter a question."})
-#
-#    return render_template('chat.html', chat_history=session['chat_history'])
-
-
 @video_bp.route('/video')
 def video():
     return render_template('video.html')
-
-# Register the Blueprint
-app.register_blueprint(video_bp)
-
-if __name__ == '__main__':
-    app.run(debug=True)

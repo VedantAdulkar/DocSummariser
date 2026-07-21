@@ -61,7 +61,7 @@ def extract_text():
         get_vector_store(text_chunks)
         return jsonify({'message': 'File processed successfully'})
 
-@pdftotext_bp.route('/ask', methods=['POST'])
+@pdftotext_bp.route('/ask_question', methods=['POST'])
 def ask_question():
     data = request.json
     user_question = data.get('question', '')

@@ -1,0 +1,28 @@
+# Environments
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyc
+
+# Local Data and Uploads
+uploads/
+faiss_index/
+extracted_audio.wav
+uploaded_video.mp4
+
+# IDEs and OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

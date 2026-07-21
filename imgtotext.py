@@ -14,9 +14,12 @@ import logging
 # Initialize Blueprint
 imgtotext_bp = Blueprint('imgtotext', __name__)
 
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-
 load_dotenv()
+
+# Configure Tesseract path from environment variable
+tesseract_cmd = os.getenv('TESSERACT_CMD', r'C:\Program Files\Tesseract-OCR\tesseract.exe')
+if tesseract_cmd:
+    pytesseract.pytesseract.tesseract_cmd = tesseract_cmd
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

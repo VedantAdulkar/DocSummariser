@@ -3,17 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Summarizer</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styleimage.css') }}">
+    <title>DocQ | Image Summarizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
     <script src="https://kit.fontawesome.com/9b7a42a725.js" crossorigin="anonymous"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('fileElem');
             const submitButton = document.getElementById('submit-button');
             const questionInput = document.getElementById('question-input');
+            const askQuestionBtn = document.getElementById('ask-question-button');
             const answerDiv = document.getElementById('answer');
             const imageContent = document.getElementById('image-content');
             const statusDiv = document.getElementById('status');
+            const dropArea = document.getElementById('drop-area');
 
             fileInput.addEventListener('change', function(event) {
                 const files = event.target.files;
@@ -24,14 +26,13 @@
                     reader.onload = function(e) {
                         const imgElement = document.createElement('img');
                         imgElement.src = e.target.result;
-                        imgElement.id = 'uploaded-image';
                         imgElement.alt = 'Uploaded Image';
                         
-                        imageContent.innerHTML = ''; // Clear previous content
+                        imageContent.innerHTML = '';
                         imageContent.appendChild(imgElement);
 
-                        submitButton.disabled = false; // Enable the button
-                        statusDiv.textContent = ''; // Clear status text
+                        submitButton.disabled = false;
+                        statusDiv.textContent = '';
                     };
 
                     reader.readAsDataURL(file);
@@ -46,25 +47,39 @@
                         formData.append('image_files', files[i]);
                     }
 
+                    statusDiv.className = 'status-msg';
+                    statusDiv.textContent = 'Processing image...';
+                    submitButton.disabled = true;
+
                     fetch('/process_image', {
                         method: 'POST',
                         body: formData
                     }).then(response => response.json()).then(data => {
                         if (data.message) {
                             statusDiv.textContent = data.message;
+                            statusDiv.classList.add('status-success');
+                            questionInput.disabled = false;
+                            askQuestionBtn.disabled = false;
                         } else if (data.error) {
                             statusDiv.textContent = data.error;
+                            statusDiv.classList.add('status-error');
+                            submitButton.disabled = false;
                         }
                     }).catch(error => {
                         console.error('Error:', error);
                         statusDiv.textContent = 'An error occurred while processing the image.';
+                        statusDiv.classList.add('status-error');
+                        submitButton.disabled = false;
                     });
                 }
             });
 
-            document.getElementById('ask-question-button').addEventListener('click', function() {
+            askQuestionBtn.addEventListener('click', function() {
                 const question = questionInput.value;
                 if (question) {
+                    answerDiv.style.display = 'block';
+                    answerDiv.textContent = 'Generating answer...';
+                    
                     fetch('/ask_question', {
                         method: 'POST',
                         headers: {
@@ -73,21 +88,20 @@
                         body: JSON.stringify({ question: question })
                     }).then(response => response.json()).then(data => {
                         if (data.answer) {
-                            answerDiv.textContent = 'Answer: ' + data.answer;
+                            answerDiv.innerHTML = `<strong>Answer:</strong><br>${data.answer}`;
                         } else if (data.error) {
-                            answerDiv.textContent = 'Error: ' + data.error;
+                            answerDiv.innerHTML = `<strong class="status-error">Error:</strong> ${data.error}`;
                         }
                     }).catch(error => {
                         console.error('Error:', error);
-                        answerDiv.textContent = 'An error occurred while getting the answer.';
+                        answerDiv.innerHTML = '<strong class="status-error">Error:</strong> An error occurred while getting the answer.';
                     });
                 } else {
-                    answerDiv.textContent = 'Please enter a question.';
+                    alert('Please enter a question.');
                 }
             });
 
-            // Optional: Add drag-and-drop functionality
-            const dropArea = document.getElementById('drop-area');
+            // Drag-and-drop functionality
             dropArea.addEventListener('dragover', function(event) {
                 event.preventDefault();
                 dropArea.classList.add('highlight');
@@ -101,37 +115,54 @@
                 event.preventDefault();
                 dropArea.classList.remove('highlight');
                 const files = event.dataTransfer.files;
-                fileInput.files = files;
-                fileInput.dispatchEvent(new Event('change'));
+                if(files.length > 0) {
+                    fileInput.files = files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
             });
         });
     </script>
 </head>
 <body>
-    <div class="container">
-        <header>
+    <header>
+        <a href="/" class="logo">
             <h1>Doc<i class="fa-solid fa-magnifying-glass-chart"></i></h1>
-            <h2>Image Summarizer</h2>
-        </header>
-        <div class="content">
-            <div id="drop-area">
-                <p>Drag & Drop your Image here</p>
+        </a>
+        <nav>
+            <a href="/image" class="active">Image</a>
+            <a href="/pdf">PDF</a>
+            <a href="/video">Video</a>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="glass-panel tool-container">
+            <div class="tool-header">
+                <h2>Image Summarizer</h2>
+                <p>Extract text from images using OCR and ask questions about the content.</p>
+            </div>
+            
+            <div id="drop-area" class="drop-zone">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"></i>
+                <p>Drag & Drop your Image here or</p>
                 <input type="file" id="fileElem" accept="image/*" multiple>
-                <label class="button" for="fileElem">Choose File</label>
+                <label class="btn" for="fileElem">Choose File</label>
             </div>
-            <div id="preview">
-                <h3>Preview</h3>
-                <div id="image-content"></div>
+            
+            <div id="preview" class="preview-box">
+                <div id="image-content" style="text-align: center; color: var(--text-muted);">Preview will appear here...</div>
             </div>
-            <div id="question-section">
-                <h3>Ask a Question</h3>
-                <input type="text" id="question-input" placeholder="Enter your question here">
-                <button id="ask-question-button">Submit Question</button>
-                <div id="answer"></div>
+            
+            <button id="submit-button" class="btn btn-primary" disabled>Extract Text</button>
+            <div id="status" class="status-msg"></div>
+
+            <div class="input-group">
+                <input type="text" id="question-input" class="input-field" placeholder="Ask a question about the image..." disabled>
+                <button id="ask-question-button" class="btn" disabled>Submit Question</button>
             </div>
+            
+            <div id="answer" class="answer-box"></div>
         </div>
-        <button id="submit-button" disabled>Submit & Process</button>
-        <div id="status"></div>
-    </div>
+    </main>
 </body>
 </html>

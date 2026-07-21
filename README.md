@@ -9,6 +9,8 @@ This project is a web application that utilizes AI and machine learning to proce
 - Summarizing YouTube videos and local video files.
 - Answering user questions based on the extracted and processed text.
 
+The user interface features a premium glassmorphism design for an excellent and modern user experience.
+
 ## Features
 
 1. **Image to Text (OCR)**
@@ -26,8 +28,8 @@ This project is a web application that utilizes AI and machine learning to proce
 ## Tech Stack
 
 - **Backend**: Flask, Python
-- **Frontend**: HTML, CSS, JavaScript
-- **AI/ML**: Langchain, Google Generative AI, Tesseract OCR, PyPDF2, YouTube Transcript API, MoviePy, SpeechRecognition, Transformers
+- **Frontend**: HTML, Vanilla CSS (Glassmorphism), JavaScript
+- **AI/ML**: Langchain, Google Generative AI (Gemini), Tesseract OCR, PyPDF2, YouTube Transcript API, MoviePy, SpeechRecognition, Transformers
 
 ## Setup
 
@@ -40,72 +42,80 @@ This project is a web application that utilizes AI and machine learning to proce
 
 1. Clone the repository:
    ```sh
-   git clone VedantAdulkar/MA_13_DocSummariser    
+   git clone https://github.com/VedantAdulkar/MA_13_DocSummariser.git
    cd MA_13_DocSummariser   
+   ```
+
 2. Create and activate a virtual environment:
    ```sh
    python -m venv venv
-   source venv/bin/activate
+   source venv/bin/activate  # On Windows, use `venv\Scripts\activate`
+   ```
+
 3. Install the required packages:  
-   ```shh
+   ```sh
    pip install -r requirements.txt
+   ```
 
+4. Install Tesseract OCR:
+   - **Windows:** Download and install Tesseract OCR from [here](https://github.com/UB-Mannheim/tesseract/wiki).
+   - **Linux:** Install Tesseract OCR using `sudo apt-get install tesseract-ocr`.
 
-4. Set up environment variables:
-  . Create a .env file in the root directory.
-  . Add your Google API key
-   ```shh
-   GOOGLE_API_KEY=your_google_api_key
-5. Install Tesseract OCR:
-   Windows: Download and install Tesseract OCR from https://github.com/UB-Mannheim/tesseract/wiki.
-   Linux: Install Tesseract OCR using the following command:
-      ```shh
-   sudo apt-get install tesseract-ocr
-
-
+5. Set up environment variables:
+   - Create a `.env` file in the root directory.
+   - Add your Google API key and Tesseract Path (if on Windows and not in PATH):
+   ```env
+   GOOGLE_API_KEY=your_google_api_key_here
+   TESSERACT_CMD="C:\Program Files\Tesseract-OCR\tesseract.exe"
+   ```
 
 ### Usage
 
 1. Run the application:
-2. Open your web browser and navigate to http://127.0.0.1:5000.
+   ```sh
+   python app.py
+   ```
+2. Open your web browser and navigate to `http://127.0.0.1:5000`.
 3. Use the following routes to access different functionalities:
-
-   /image: Upload images and extract text.
-   /pdf: Upload PDF documents and extract text.
-   /video: Summarize YouTube videos and local videos.
+   - `/image`: Upload images and extract text.
+   - `/pdf`: Upload PDF documents and extract text.
+   - `/video`: Summarize YouTube videos and local videos.
    
 ### Project Structure
-  MA_13_DocSummariser/
+
+```text
+MA_13_DocSummariser/
 ├── app.py
 ├── imgtotext.py
 ├── pdftotext.py
 ├── video.py
+├── requirements.txt
+├── .env
+├── .gitignore
 ├── templates/
 │   ├── index.html
 │   ├── imagetotext.html
 │   ├── pdftotext.html
-│   ├── video.html
-├── static/
-│   ├── css/
-│   ├── js/
-├── requirements.txt
-└── .env
+│   └── video.html
+└── static/
+    └── main.css
+```
 
 ### Dependencies
-Flask
-Pillow
-pytesseract
-PyPDF2
-langchain
-langchain_google_genai
-langchain_community
-moviepy
-speechrecognition
-transformers
-youtube_transcript_api
-google-generativeai
+- Flask
+- Pillow
+- pytesseract
+- PyPDF2
+- langchain
+- langchain_google_genai
+- langchain_community
+- moviepy
+- speechrecognition
+- transformers
+- youtube_transcript_api
+- google-generativeai
 
-## Usage
+## Usage Guide
 
 1. **Upload an Image or PDF:** Use the web interface to upload an image or PDF for text extraction.
 2. **Provide YouTube or Local Video URL:** Enter the URL of a YouTube video or upload a local video file for summarization.

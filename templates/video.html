@@ -3,86 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Summarizer</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='stylevideo.css') }}">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <title>DocQ | Video Summarizer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='main.css') }}">
     <script src="https://kit.fontawesome.com/9b7a42a725.js" crossorigin="anonymous"></script>
-    
-    <style>
-        /* Loader CSS */
-        .loader {
-            display: none;
-            border: 16px solid #f3f3f3;
-            border-top: 16px solid #3498db;
-            border-radius: 50%;
-            width: 120px;
-            height: 120px;
-            animation: spin 2s linear infinite;
-            margin: 20px auto;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Hide loader by default */
-        .loader.hidden {
-            display: none;
-        }
-
-        /* Thumbnail CSS */
-        .thumbnail {
-            display: none;
-            text-align: center;
-            margin: 20px 0;
-        }
-
-        .thumbnail img {
-            max-width: 100%;
-            height: auto;
-        }
-    </style>
-</head>
-<body>
-    <header class="animate__animated animate__fadeIn">
-        <h1>Doc<i class="fa-solid fa-magnifying-glass-chart"></i></h1>
-        <h2>Video Summarizer</h2>
-    </header>
-    <div class="container animate__animated animate__fadeInUp">
-        <div class="tab-container">
-            <button class="tab-button active" data-tab="import">Import Video</button>
-            <button class="tab-button" data-tab="youtube">YouTube Video</button>
-        </div>
-        <div id="import" class="section active">
-            <input type="file" id="file-upload" accept="video/*">
-            <label for="file-upload" class="custom-file-upload">Choose File</label>
-            <button class="summarize" onclick="summarizeVideo('import')">Summarize</button>
-        </div>
-        <div id="youtube" class="section">
-            <input type="text" id="video-url" name="youtube_url" placeholder="Enter YouTube video URL here" oninput="updateThumbnail()">
-            <button class="summarize" onclick="summarizeVideo('youtube')">Summarize</button>
-            <div class="thumbnail" id="thumbnail">
-                <img id="thumbnail-img" src="" alt="YouTube Thumbnail">
-            </div>
-        </div>
-        <div id="status" data-transcript=""></div>
-        <div class="loader" id="loader"></div> <!-- Loader element -->
-    </div>
-    <div class="question-section animate__animated animate__fadeInUp">
-        <input type="text" id="question-input" placeholder="Ask a question about the video">
-        <button id="ask-button" class="ask-button">Ask Question</button>
-    </div>
-    <div id="answer-display" class="answer-display animate__animated animate__fadeIn"></div>
-
     <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching logic
+            document.querySelectorAll('.tab-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    document.querySelectorAll('.tab-content').forEach(section => section.classList.remove('active'));
+                    document.getElementById(button.dataset.tab).classList.add('active');
+                });
+            });
+
+            // Drag and drop for local video upload
+            const dropArea = document.getElementById('drop-area');
+            const fileInput = document.getElementById('file-upload');
+            const fileLabel = document.getElementById('file-label-text');
+
+            if (dropArea) {
+                dropArea.addEventListener('dragover', function(event) {
+                    event.preventDefault();
+                    dropArea.classList.add('highlight');
+                });
+
+                dropArea.addEventListener('dragleave', function() {
+                    dropArea.classList.remove('highlight');
+                });
+
+                dropArea.addEventListener('drop', function(event) {
+                    event.preventDefault();
+                    dropArea.classList.remove('highlight');
+                    const files = event.dataTransfer.files;
+                    if(files.length > 0) {
+                        fileInput.files = files;
+                        fileLabel.textContent = files[0].name;
+                    }
+                });
+
+                fileInput.addEventListener('change', function() {
+                    if (this.files && this.files.length > 0) {
+                        fileLabel.textContent = this.files[0].name;
+                    }
+                });
+            }
+        });
+
         function updateThumbnail() {
             const videoUrl = document.getElementById('video-url').value;
             const thumbnailDiv = document.getElementById('thumbnail');
             const thumbnailImg = document.getElementById('thumbnail-img');
             
-            if (videoUrl) {
+            if (videoUrl && videoUrl.includes("v=")) {
                 const videoId = videoUrl.split("v=")[1].split("&")[0];
                 thumbnailImg.src = `https://img.youtube.com/vi/${videoId}/0.jpg`;
                 thumbnailDiv.style.display = 'block';
@@ -93,15 +68,33 @@
 
         function summarizeVideo(type) {
             const loader = document.getElementById('loader');
-            loader.style.display = 'block'; // Show the loader
+            const statusDiv = document.getElementById('status');
+            const askGroup = document.getElementById('ask-group');
+            
+            loader.style.display = 'block';
+            statusDiv.className = 'status-msg';
+            statusDiv.textContent = 'Processing video... this may take a while.';
+            statusDiv.style.display = 'block';
 
             let formData = new FormData();
             formData.append('type', type);
             if (type === 'youtube') {
                 const videoUrl = document.getElementById('video-url').value;
+                if(!videoUrl) {
+                    alert('Please enter a YouTube URL');
+                    loader.style.display = 'none';
+                    statusDiv.style.display = 'none';
+                    return;
+                }
                 formData.append('youtube_url', videoUrl);
             } else if (type === 'import') {
                 const fileInput = document.getElementById('file-upload');
+                if(!fileInput.files || fileInput.files.length === 0) {
+                    alert('Please choose a file');
+                    loader.style.display = 'none';
+                    statusDiv.style.display = 'none';
+                    return;
+                }
                 formData.append('file', fileInput.files[0]);
             }
 
@@ -111,33 +104,40 @@
             })
             .then(response => response.json())
             .then(data => {
-                const statusDiv = document.getElementById('status');
                 if (data.error) {
-                    statusDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+                    statusDiv.innerHTML = `<span class="status-error">Error: ${data.error}</span>`;
                 } else {
-                    statusDiv.innerHTML = `<p>Summary: ${data.summary}</p>`;
-                    statusDiv.setAttribute('data-transcript', data.transcript || ''); // Save transcript in a data attribute
+                    statusDiv.innerHTML = `<strong>Summary:</strong><br><br>${data.summary.replace(/\\n/g, '<br>')}`;
+                    statusDiv.classList.add('answer-box');
+                    statusDiv.style.display = 'block';
+                    
+                    if(data.transcript) {
+                        statusDiv.setAttribute('data-transcript', data.transcript);
+                        askGroup.style.display = 'flex'; // Show question area
+                    }
                 }
             })
             .catch(error => {
-                const statusDiv = document.getElementById('status');
-                statusDiv.innerHTML = `<p>Error: ${error}</p>`;
+                statusDiv.innerHTML = `<span class="status-error">Error: ${error.message}</span>`;
             })
             .finally(() => {
-                loader.style.display = 'none'; // Hide the loader after processing
+                loader.style.display = 'none';
             });
         }
 
-        document.getElementById('ask-button').addEventListener('click', function() {
-            const question = document.getElementById('question-input').value;
-            const transcript = document.querySelector('#status').getAttribute('data-transcript'); // Get transcript from data attribute
-            console.log(transcript);
-            console.log(question);
+        function askQuestion() {
+            const questionInput = document.getElementById('question-input');
+            const question = questionInput.value;
+            const transcript = document.querySelector('#status').getAttribute('data-transcript');
+            const answerDisplay = document.getElementById('answer-display');
 
             if (!question || !transcript) {
-                alert('Please ensure you have a question and transcript available.');
+                alert('Please ensure you have a question and a processed transcript available.');
                 return;
             }
+
+            answerDisplay.style.display = 'block';
+            answerDisplay.textContent = 'Generating answer...';
 
             fetch('/ask_question', {
                 method: 'POST',
@@ -147,27 +147,75 @@
             .then(response => response.json())
             .then(data => {
                 if (data.answer) {
-                    console.log(data.answer);
-                    document.getElementById('answer-display').innerText = `Answer: ${data.answer}`;
+                    answerDisplay.innerHTML = `<strong>Answer:</strong><br>${data.answer.replace(/\\n/g, '<br>')}`;
+                } else if (data.error) {
+                    answerDisplay.innerHTML = `<strong class="status-error">Error:</strong> ${data.error}`;
                 } else {
-                    document.getElementById('answer-display').innerText = 'No answer found.';
+                    answerDisplay.innerHTML = 'No answer found.';
                 }
             })
             .catch(error => {
-                document.getElementById('answer-display').innerText = `Error: ${error}`;
+                answerDisplay.innerHTML = `<strong class="status-error">Error:</strong> ${error}`;
             });
-        });
-
-        // Script to handle tab switching
-        document.querySelectorAll('.tab-button').forEach(button => {
-            button.addEventListener('click', () => {
-                document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-                button.classList.add('active');
-
-                document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
-                document.getElementById(button.dataset.tab).classList.add('active');
-            });
-        });
+        }
     </script>
+</head>
+<body>
+    <header>
+        <a href="/" class="logo">
+            <h1>Doc<i class="fa-solid fa-magnifying-glass-chart"></i></h1>
+        </a>
+        <nav>
+            <a href="/image">Image</a>
+            <a href="/pdf">PDF</a>
+            <a href="/video" class="active">Video</a>
+        </nav>
+    </header>
+
+    <main class="main-content">
+        <div class="glass-panel tool-container">
+            <div class="tool-header">
+                <h2>Video Summarizer</h2>
+                <p>Summarize YouTube videos or local video files and ask questions.</p>
+            </div>
+            
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="tab-youtube">YouTube Video</button>
+                <button class="tab-btn" data-tab="tab-import">Local Video</button>
+            </div>
+
+            <div id="tab-youtube" class="tab-content active">
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <input type="text" id="video-url" class="input-field" placeholder="Enter YouTube video URL here (e.g. https://youtube.com/watch?v=...)" oninput="updateThumbnail()">
+                </div>
+                
+                <div id="thumbnail" class="preview-box" style="display: none; text-align: center;">
+                    <img id="thumbnail-img" src="" alt="YouTube Thumbnail">
+                </div>
+                
+                <button class="btn btn-primary" onclick="summarizeVideo('youtube')">Summarize Video</button>
+            </div>
+
+            <div id="tab-import" class="tab-content">
+                <div id="drop-area" class="drop-zone">
+                    <i class="fas fa-file-video" style="font-size: 3rem; color: var(--accent); margin-bottom: 15px;"></i>
+                    <p id="file-label-text">Drag & Drop your Video here or</p>
+                    <input type="file" id="file-upload" accept="video/*">
+                    <label class="btn" for="file-upload">Choose File</label>
+                </div>
+                <button class="btn btn-primary" onclick="summarizeVideo('import')">Summarize Video</button>
+            </div>
+
+            <div id="loader" class="loader"></div>
+            <div id="status" class="status-msg" style="display: none;"></div>
+
+            <div id="ask-group" class="input-group" style="display: none;">
+                <input type="text" id="question-input" class="input-field" placeholder="Ask a question about the video...">
+                <button id="ask-button" class="btn" onclick="askQuestion()">Ask</button>
+            </div>
+            
+            <div id="answer-display" class="answer-box"></div>
+        </div>
+    </main>
 </body>
 </html>
